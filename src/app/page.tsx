@@ -1,65 +1,149 @@
-import Image from "next/image";
+// src/app/page.tsx
 
-export default function Home() {
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { ParcelForm } from "@/components/ParcelForm";
+import { BatchUpload } from "@/components/BatchUpload";
+import { AuditLog } from "@/components/AuditLog";
+import { Package, UploadCloud, ClipboardList } from "lucide-react";
+
+// ─── Static stat cards ────────────────────────────────────────────────────────
+
+const DEPARTMENTS = [
+  {
+    label: "Mail Department",
+    rule: "Up to 1 kg",
+    color: "border-blue-200 bg-blue-50",
+    dot: "bg-blue-400",
+    textColor: "text-blue-800",
+  },
+  {
+    label: "Regular Department",
+    rule: "1 kg – 10 kg",
+    color: "border-green-200 bg-green-50",
+    dot: "bg-green-400",
+    textColor: "text-green-800",
+  },
+  {
+    label: "Heavy Department",
+    rule: "Over 10 kg",
+    color: "border-orange-200 bg-orange-50",
+    dot: "bg-orange-400",
+    textColor: "text-orange-800",
+  },
+  {
+    label: "Insurance Required",
+    rule: "Value over €1,000",
+    color: "border-amber-200 bg-amber-50",
+    dot: "bg-amber-400",
+    textColor: "text-amber-800",
+  },
+];
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="space-y-8">
+
+      {/* ── Page header ── */}
+      <div className="space-y-1">
+        <h1 className="text-xl font-bold text-gray-900 tracking-tight">
+          Parcel Routing
+        </h1>
+        <p className="text-sm text-gray-500">
+          Route individual parcels or upload a batch file to assign parcels
+          to the correct department automatically.
+        </p>
+      </div>
+
+      {/* ── Routing rules reference ── */}
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
+          Active Routing Rules
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {DEPARTMENTS.map((dept) => (
+            <div
+              key={dept.label}
+              className={`rounded-lg border px-3 py-2.5 ${dept.color}`}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className={`h-2 w-2 rounded-full shrink-0 ${dept.dot}`} />
+                <p className={`text-xs font-semibold ${dept.textColor}`}>
+                  {dept.label}
+                </p>
+              </div>
+              <p className="text-xs text-gray-500 pl-3.5">{dept.rule}</p>
+            </div>
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
+
+      <Separator />
+
+      {/* ── Main tabs ── */}
+      <Tabs defaultValue="single" className="space-y-6">
+
+        <TabsList className="grid grid-cols-3 w-full sm:w-auto sm:inline-grid sm:grid-cols-3 h-9">
+          <TabsTrigger value="single" className="gap-1.5 text-sm">
+            <Package className="h-3.5 w-3.5" />
+            <span>Single Parcel</span>
+          </TabsTrigger>
+          <TabsTrigger value="batch" className="gap-1.5 text-sm">
+            <UploadCloud className="h-3.5 w-3.5" />
+            <span>Batch Upload</span>
+          </TabsTrigger>
+          <TabsTrigger value="audit" className="gap-1.5 text-sm">
+            <ClipboardList className="h-3.5 w-3.5" />
+            <span>Audit Log</span>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* ── Single parcel tab ── */}
+        <TabsContent value="single">
+          <div className="max-w-xl space-y-2">
+            <div className="space-y-0.5">
+              <h2 className="text-sm font-semibold text-gray-800">
+                Route a Single Parcel
+              </h2>
+              <p className="text-xs text-gray-400">
+                Enter the parcel details below. The system will instantly
+                assign it to the correct department.
+              </p>
+            </div>
+            <div className="pt-2">
+              <ParcelForm />
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* ── Batch upload tab ── */}
+        <TabsContent value="batch">
+          <div className="space-y-2">
+            <div className="space-y-0.5">
+              <h2 className="text-sm font-semibold text-gray-800">
+                Upload Batch File
+              </h2>
+              <p className="text-xs text-gray-400">
+                Upload an <code className="font-mono bg-gray-100 px-1 rounded">.xml</code> or{" "}
+                <code className="font-mono bg-gray-100 px-1 rounded">.json</code> file
+                containing multiple parcels. All parcels will be routed and
+                results shown in a sortable table. Maximum file size: 10 MB.
+              </p>
+            </div>
+            <div className="pt-2">
+              <BatchUpload />
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* ── Audit log tab ── */}
+        <TabsContent value="audit">
+          <AuditLog />
+        </TabsContent>
+
+      </Tabs>
     </div>
   );
 }

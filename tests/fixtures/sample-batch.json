@@ -1,0 +1,50 @@
+{
+  "batchId": "test-batch-001",
+  "parcels": [
+    {
+      "weight": 0.5,
+      "value": 0,
+      "recipient": { "name": "Alice Mail" }
+    },
+    {
+      "weight": 1,
+      "value": 0,
+      "recipient": { "name": "Bob Boundary Mail" }
+    },
+    {
+      "weight": 5,
+      "value": 0,
+      "recipient": { "name": "Carol Regular" }
+    },
+    {
+      "weight": 10,
+      "value": 0,
+      "recipient": { "name": "Dave Boundary Regular" }
+    },
+    {
+      "weight": 15,
+      "value": 0,
+      "recipient": { "name": "Eve Heavy" }
+    },
+    {
+      "weight": 0.9,
+      "value": 1100,
+      "recipient": { "name": "Frank Mail + Insurance" }
+    },
+    {
+      "weight": 5,
+      "value": 1500,
+      "recipient": { "name": "Grace Regular + Insurance" }
+    },
+    {
+      "weight": 100,
+      "value": 2000,
+      "recipient": { "name": "Henry Heavy + Insurance" }
+    },
+    {
+      "weight": 2,
+      "value": 1000,
+      "recipient": { "name": "Iris No Insurance Boundary" }
+    }
+  ]
+}

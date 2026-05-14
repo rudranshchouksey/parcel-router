@@ -2,11 +2,11 @@ import { z } from 'zod';
 
 export const ParcelInputSchema = z.object({
   weight: z
-    .number({ required_error: 'Weight is required' })
+    .number({ error: 'Weight is required' })
     .positive('Weight must be greater than 0')
     .max(10000, 'Weight cannot exceed 10,000 kg'),
   value: z
-    .number({ required_error: 'Value is required' })
+    .number({ error: 'Value is required' })
     .min(0, 'Value cannot be negative')
     .max(10_000_000, 'Value cannot exceed €10,000,000'),
   destinationCountry: z.string().max(100).optional(),

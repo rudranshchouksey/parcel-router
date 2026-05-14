@@ -13,7 +13,7 @@
     "jsx": "react-jsx",
     "incremental": true,
     "module": "ESNext",
-    "ignoreDeprecations": "6.0",
+    "ignoreDeprecations": "5.0",
     "plugins": [
       {
         "name": "next"
