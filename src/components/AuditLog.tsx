@@ -99,33 +99,47 @@ export function AuditLog() {
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const fetchRecords = useCallback(async () => {
-    try {
-      const params = new URLSearchParams({ limit: "50" });
-      if (departmentFilter !== "all") params.set("department", departmentFilter);
+const fetchRecords = useCallback(async (signal?: AbortSignal) => {
+  try {
+    const params = new URLSearchParams({ limit: "50" });
+    if (departmentFilter !== "all") params.set("department", departmentFilter);
 
-      const res = await fetch(`/api/audit?${params.toString()}`);
-      if (!res.ok) throw new Error(`Failed to fetch audit log (${res.status})`);
+    const res = await fetch(`/api/audit?${params.toString()}`, { signal });
 
-      const data = await res.json();
-      setRecords(data.records);
-      setLastUpdated(new Date());
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load audit log");
-    } finally {
-      setLoading(false);
-    }
-  }, [departmentFilter]);
+    // Ignore errors from intentional abort (tab switch / component unmount)
+    if (signal?.aborted) return;
+
+    if (!res.ok) throw new Error(`Failed to fetch audit log (${res.status})`);
+
+    const data = await res.json();
+    setRecords(data.records);
+    setLastUpdated(new Date());
+    setError(null);
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") return;
+    setError(err instanceof Error ? err.message : "Failed to load audit log");
+  } finally {
+    if (!signal?.aborted) setLoading(false);
+  }
+}, [departmentFilter]);
 
   // Initial load + auto-refresh every 30 seconds
-  useEffect(() => {
-    setLoading(true);
-    fetchRecords();
+useEffect(() => {
+  const controller = new AbortController();
+  setLoading(true);
+  fetchRecords(controller.signal);
 
-    const interval = setInterval(fetchRecords, 30_000);
-    return () => clearInterval(interval);
-  }, [fetchRecords]);
+  const interval = setInterval(() => {
+    fetchRecords(controller.signal);
+  }, 30_000);
+
+  // Cleanup: cancels in-flight fetch AND clears interval on unmount
+  return () => {
+    controller.abort();
+    clearInterval(interval);
+  };
+}, [fetchRecords]);
+
 
   const handleManualRefresh = () => {
     setLoading(true);

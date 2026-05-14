@@ -304,3 +304,100 @@ RATE_LIMIT_WINDOW_MS="60000"
 MAX_BATCH_FILE_SIZE_MB="10"
 LOG_LEVEL="info"
 ```
+
+## Middleware & Cross-Cutting Concerns
+
+Rate limiting, correlation IDs, and request-scoped concerns are handled
+in `src/middleware.ts` — not in individual route handlers.
+
+**Why middleware:**
+Duplicating rate limiting across every API route creates drift.
+One route gets updated, another doesn't.
+Middleware runs before any route handler, on every matching request,
+ensuring consistent enforcement with zero duplication.
+
+**Route-specific limits:**
+| Route | Limit | Reason |
+|---|---|---|
+| POST /api/route | 60 req/min | Single parcel — lightweight |
+| POST /api/batch | 10 req/min | File processing — expensive |
+| GET /api/audit | 30 req/min | DB read — moderate cost |
+
+**Correlation IDs:**
+Every API request receives a `x-correlation-id` UUID header.
+This ID appears in all log events for that request.
+When an operator reports "something went wrong at 3pm", you search
+logs for the correlation ID and see the full request trace.
+
+**Production note:**
+The in-memory rate limiter works for a single server instance.
+For multi-instance deployments, replace with @upstash/ratelimit + Redis.
+The interface is identical — only the backing store changes.
+
+## Monitoring & Reliability
+
+### Structured Log Events
+
+Every routing decision emits a JSON log event with consistent fields:
+
+\`\`\`json
+{
+  "level": "info",
+  "event": "routing_decision",
+  "parcelWeight": 5,
+  "parcelValue": 1500,
+  "department": "Regular",
+  "requiresInsurance": true,
+  "appliedRule": "InsuranceRequired",
+  "source": "batch_xml",
+  "batchId": "clx1234abc",
+  "processingMs": 4,
+  "correlationId": "uuid-here"
+}
+\`\`\`
+
+### What to Alert On (Production)
+
+| Alert | Condition | Severity |
+|---|---|---|
+| Routing engine error | `event: routing_error` | 🔴 Critical |
+| ManualReview spike | `department: ManualReview` rate > 5% | 🟡 Warning |
+| Batch failure | `batchJob.status: failed` | 🔴 Critical |
+| High insurance rate | `requiresInsurance` rate > 50% | 🟡 Anomaly |
+| Latency degradation | `processingMs > 500` | 🟡 Warning |
+| Rate limit spike | HTTP 429 rate > 1% | 🟡 Anomaly |
+
+### Detecting Unusual Patterns
+
+The `flags[]` array and `appliedRuleLabel` field enable pattern queries:
+
+\`\`\`sql
+-- Detect insurance approval spike
+SELECT DATE_TRUNC('hour', "createdAt"), COUNT(*)
+FROM "RoutingRecord"
+WHERE "requiresInsurance" = true
+GROUP BY 1 ORDER BY 1 DESC;
+
+-- Detect sudden ManualReview increase (rule misconfiguration signal)
+SELECT DATE_TRUNC('hour', "createdAt"), COUNT(*)
+FROM "RoutingRecord"
+WHERE department = 'ManualReview'
+GROUP BY 1 ORDER BY 1 DESC;
+\`\`\`
+
+### PostgreSQL Dependency Note
+
+This application requires **PostgreSQL** — not SQLite or MySQL.
+The `flags String[]` field uses a native PostgreSQL array type.
+Prisma does not support array fields on SQLite.
+CI environments must use a PostgreSQL service container.
+
+\`\`\`yaml
+# GitHub Actions example
+services:
+  postgres:
+    image: postgres:15
+    env:
+      POSTGRES_DB: parcel_router_test
+      POSTGRES_PASSWORD: test
+\`\`\`
