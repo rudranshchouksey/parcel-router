@@ -11,3 +11,43 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model RoutingRecord {
+  id                String    @id @default(cuid())
+  createdAt         DateTime  @default(now())
+
+  // Input
+  weight            Float
+  value             Float
+  destinationCountry String?
+  recipientName     String?
+  batchId           String?   // Links batch records together
+
+  // Decision
+  department        String    // "Mail" | "Regular" | "Heavy" | "ManualReview"
+  requiresInsurance Boolean   @default(false)
+  reason            String    // Human-readable explanation
+  appliedRuleLabel  String    // Which rule triggered this decision
+  flags             String[]  // e.g. ["HIGH_VALUE", "OVER_WEIGHT"]
+
+  // Meta
+  source            String    // "single" | "batch_xml" | "batch_json"
+  processingMs      Int?      // Performance tracking
+
+  @@index([createdAt])
+  @@index([department])
+  @@index([batchId])
+}
+
+model BatchJob {
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  filename    String
+  format      String    // "xml" | "json"
+  totalCount  Int
+  successCount Int
+  errorCount  Int
+  status      String    // "completed" | "partial" | "failed"
+
+  @@index([createdAt])
+}
