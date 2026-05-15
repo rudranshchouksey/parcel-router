@@ -1,5 +1,5 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '../generated/prisma/client';
+import { PrismaClient } from '@/generated/prisma/client';
 
 // Prevent multiple instances in Next.js dev hot-reloading
 const globalForPrisma = globalThis as unknown as {
