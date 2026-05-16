@@ -1,13 +1,9 @@
-// src/app/page.tsx
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ParcelForm } from "@/components/ParcelForm";
 import { BatchUpload } from "@/components/BatchUpload";
 import { AuditLog } from "@/components/AuditLog";
 import { Package, UploadCloud, ClipboardList } from "lucide-react";
-
-// ─── Static stat cards ────────────────────────────────────────────────────────
 
 const DEPARTMENTS = [
   {
@@ -39,8 +35,6 @@ const DEPARTMENTS = [
     textColor: "text-amber-800",
   },
 ];
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
   return (

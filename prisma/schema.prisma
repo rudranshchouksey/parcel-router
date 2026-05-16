@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -16,23 +11,20 @@ model RoutingRecord {
   id                String    @id @default(cuid())
   createdAt         DateTime  @default(now())
 
-  // Input
   weight            Float
   value             Float
   destinationCountry String?
   recipientName     String?
-  batchId           String?   // Links batch records together
+  batchId           String?   
 
-  // Decision
-  department        String    // "Mail" | "Regular" | "Heavy" | "ManualReview"
+  department        String    
   requiresInsurance Boolean   @default(false)
-  reason            String    // Human-readable explanation
-  appliedRuleLabel  String    // Which rule triggered this decision
-  flags             String[]  // e.g. ["HIGH_VALUE", "OVER_WEIGHT"]
+  reason            String    
+  appliedRuleLabel  String    
+  flags             String[]  
 
-  // Meta
-  source            String    // "single" | "batch_xml" | "batch_json"
-  processingMs      Int?      // Performance tracking
+  source            String    
+  processingMs      Int?      
 
   @@index([createdAt])
   @@index([department])
@@ -43,11 +35,11 @@ model BatchJob {
   id          String    @id @default(cuid())
   createdAt   DateTime  @default(now())
   filename    String
-  format      String    // "xml" | "json"
+  format      String    
   totalCount  Int
   successCount Int
   errorCount  Int
-  status      String    // "completed" | "partial" | "failed"
+  status      String    
 
   @@index([createdAt])
 }
